@@ -448,13 +448,11 @@ def scanner(code):
 
 
 def main():
-  # Print usage if arguments are not legal
-  if len(sys.argv) < 2:
-    print('[Usage] ./scan.py <C source file path>')
-    sys.exit(0)
+
 
   # Read file from file path taken from command line arguments
-  filePath = sys.argv[1]
+  filePath = "test/input.c"
+# print(filePath)
   with open(filePath, 'r', encoding='utf-8') as f:
     content = f.readlines()
 
@@ -465,7 +463,7 @@ def main():
   # C source file name
   fileName = os.path.basename(filePath)
   # XML output file name
-  xmlFileName = os.path.splitext(fileName)[0] + '.token.xml'
+  xmlFileName = 'test/input.token.xml'
 
   # Create XML tree
   xmlTree = ElementTree.Element('project', {
