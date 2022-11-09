@@ -50,6 +50,7 @@ def main():
 
   # 文法文件路径
   grammarFilePath = 'grammar.txt'
+  scan.lex_scan()
 
   # 1. 读入文法
   grammar = parserUtils.readGrammar(grammarFilePath)

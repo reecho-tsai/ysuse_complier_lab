@@ -447,7 +447,7 @@ def scanner(code):
     codeType = 'END_OF_FILE'
 
 
-def main():
+def lex_scan():
 
 
   # Read file from file path taken from command line arguments
@@ -508,7 +508,3 @@ def main():
   with open(xmlFileName, 'wb') as f:
     f.write(xml)
   print('Written XML token processing results to file:', xmlFileName)
-
-
-if __name__ == "__main__":
-  main()
