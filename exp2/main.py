@@ -1,15 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""
-自上而下的 LL(1) 分析器
-Top down: LL(1) parser
-主控程序：main.py
-下级程序：
-- 工具库：parserUtils.py
-- 输入串处理：parserGeneral.py
-"""
-
 import collections
 import copy
 import os
@@ -38,97 +29,72 @@ def readToken(filePath):
 
 
 def main():
-  """
-  日志级别：
-  - 10: Verbose
-  -  5: Essential
-  -  1: None
-  """
-  logLevel = 10
-
   print('[INFO] Start parsing...')
 
   # 文法文件路径
-  grammarFilePath = 'grammar.txt'
+  grammarFile = 'grammar.txt'
   scan.lex_scan()
 
   # 1. 读入文法
-  grammar = parserUtils.readGrammar(grammarFilePath)
-  if (logLevel > 1):
-    print('[Grammar]:')
-    for grammaritem in grammar.items():
-      print(' ', grammaritem)
+  grammar = parserUtils.readGrammar(grammarFile)
 
   # 2. 划分终结符与非终结符
   terminalSymbols, nonTerminalSymbols = parserUtils.differentiateSymbols(
       grammar)
-  #if (logLevel > 9):
-    #print('[Terminal Symbols]:\n ', terminalSymbols)
-    #print('[Nonterminal Symbols]:\n ', nonTerminalSymbols)
 
   # 3-1. 递归求 FIRST 集
-  grammarFirstSet = collections.defaultdict(list)
-  grammarFirstSet = parserUtils.getFIRST(
-      grammarFirstSet, grammar, terminalSymbols, nonTerminalSymbols)
+  firstSet = collections.defaultdict(list)
+  firstSet = parserUtils.getFIRST(
+      firstSet, grammar, terminalSymbols, nonTerminalSymbols)
   while True:
-    originalFirstSet = copy.deepcopy(grammarFirstSet)
-    # 查看递归情况的 LOG
-    # print(originalFirstSet)
-    grammarFirstSet = parserUtils.getFIRST(
-        grammarFirstSet, grammar, terminalSymbols, nonTerminalSymbols)
-    if grammarFirstSet == originalFirstSet:
+    originalFirst = copy.deepcopy(firstSet)
+    firstSet = parserUtils.getFIRST(
+        firstSet, grammar, terminalSymbols, nonTerminalSymbols)
+    if firstSet == originalFirst:
       break
-  if (logLevel > 9):
-    print('[FIRST SET]:')
-    for item in grammarFirstSet.items():
-      print(' ', item)
+  
+  print('[FIRST SET]:')
+  for item in firstSet.items():
+    print(' ', item)
 
   # 3-2. 递归求 FOLLOW 集
   grammarTop = list(grammar.keys())[0]
-  grammarFollowSet = collections.defaultdict(list, {grammarTop: ['#']})
+  followSet = collections.defaultdict(list, {grammarTop: ['#']})
 
-  grammarFollowSet = parserUtils.getFOLLOW(
-      grammarFirstSet, grammarFollowSet, grammar, terminalSymbols, nonTerminalSymbols)
+  followSet = parserUtils.getFOLLOW(
+      firstSet, followSet, grammar, terminalSymbols, nonTerminalSymbols)
   while True:
-    originalFollowSet = copy.deepcopy(grammarFollowSet)
-    # print(originalFollowSet)
-    grammarFollowSet = parserUtils.getFOLLOW(
-        grammarFirstSet, grammarFollowSet, grammar, terminalSymbols, nonTerminalSymbols)
-    if grammarFollowSet == originalFollowSet:
+    originalFollow = copy.deepcopy(followSet)
+    followSet = parserUtils.getFOLLOW(
+        firstSet, followSet, grammar, terminalSymbols, nonTerminalSymbols)
+    if followSet == originalFollow:
       break
 
-  if (logLevel > 9):
-    print('[FOLLOW SET]:')
-    for item in grammarFollowSet.items():
-      print(' ', item)
+  print('[FOLLOW SET]:')
+  for item in followSet.items():
+    print(' ', item)
 
   # 4. 创建 LL1 分析表
   analyzeTable = parserUtils.createAnalyzeTable(
-      grammar, terminalSymbols, nonTerminalSymbols, grammarFirstSet, grammarFollowSet)
-  if (logLevel > 1):
-    print('[ANALYZE TABLE]:')
-    for item in analyzeTable.items():
-      print(' ', item)
-
-  # 5. Demo: 分析一个串 i+i*i
-  # inputString = 'i+i*i'
-  # parserGeneral.parseInputString(
-  #     inputString, grammar, terminalSymbols, nonTerminalSymbols, analyzeTable)
+      grammar, terminalSymbols, nonTerminalSymbols, firstSet, followSet)
+  print('[ANALYZE TABLE]:')
+  for item in analyzeTable.items():
+    print(' ', item)
+  with open('analyze_table.csv', 'w') as f:
+    print(type(f))
+    [f.write('{0},{1}\n'.format(key, value)) for key, value in analyzeTable.items()]
 
   # 分析输入 Token 文件
-  tokenFilePath = os.path.join('test', 'input.token.xml')
-  tokenList = readToken(tokenFilePath)
+  tokenFile = os.path.join('test', 'input.token.xml')
+  print("[ANALYZE STACK]")
+  tokenList = readToken(tokenFile)
   tree = parserGeneral.parseToken(
       tokenList, grammar, terminalSymbols, nonTerminalSymbols, analyzeTable)
-  #for pre, _, node in RenderTree(tree):
-  #  print("%s%s" % (pre, node.name))
 
   exporter = DictExporter(dictcls=collections.OrderedDict, attriter=sorted)
   exportDict = exporter.export(tree)
   xml = parseString(dicttoxml(exportDict, attr_type=False))
   xml = xml.toprettyxml(indent='  ', encoding='utf-8')
-  with open('test/parse.xml', 'wb') as f:
-    f.write(xml)
 
 
 if __name__ == "__main__":
