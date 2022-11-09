@@ -120,6 +120,7 @@ Exp:Exp ASSIGNOP Exp{$$=newAst("Exp",3,$1,$2,$3);nodeList[nodeNum]=$$;nodeNum++;
         |ID {$$=newAst("Exp",1,$1);nodeList[nodeNum]=$$;nodeNum++;}
         |INT {$$=newAst("Exp",1,$1);nodeList[nodeNum]=$$;nodeNum++;}
         |FLOAT{$$=newAst("Exp",1,$1);nodeList[nodeNum]=$$;nodeNum++;}
+        |error{}
         ;
 Args:Exp COMMA Args {$$=newAst("Args",3,$1,$2,$3);nodeList[nodeNum]=$$;nodeNum++;}
         |Exp {$$=newAst("Args",1,$1);nodeList[nodeNum]=$$;nodeNum++;}
